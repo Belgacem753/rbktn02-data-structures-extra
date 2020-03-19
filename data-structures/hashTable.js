@@ -52,9 +52,6 @@ Resize the hash table:
 - if the count becomes less than 25% of the table size, cut the table size in half and redistribute the key/value pairs
 
 
-
-
-
 */
 
 // Simple hashing function to use in your implementation
@@ -63,43 +60,104 @@ function simpleHash(str, tableSize) {
   for (var i=0; i<str.length; i++) {
     hash += str.charCodeAt(i) * (i+1);
   }
-  return hash % tableSize;
+  return hash % tableSize; 
 }
 // source: http://pmav.eu/stuff/javascript-hashing-functions/source.html
 
-function HashTable(/* ??? */) {
-  // implement me...
+function HashTable(limit) {
+
+  this._limit = limit;
+  this._size = 0;
+  this._storage = LimitedArray(this._limit);
+  
 }
 
 // This is a helper method that you may want to implement to help keep your code DRY
 // You can implement the hash table methods without it.
-// I recommend skipping it and coming back if you find that it will be useful
-HashTable.prototype.find = function(key) {
-  // implement me...
-  return {
-    match: match,
-    bucket: bucket,
-    matchIndex: matchIndex
-  };
+// I recommend skipping it and coming back if you find that it will be usefu
+
+HashTable.prototype.set = function(key, value) { //Insert or add
+  var index= simpleHash(key, this._limit);
+  var bucket = this._storage.get(index)||[];
+  for ( var i =0 ; i< bucket.length ; i++){
+    var tupple = bucket[i];
+    if ( tupple[0] ===key){
+      var oldValue = tupple[1];
+      tupple[1] = value;
+
+      return oldValue
+    }
+  }
+
+  bucket.push([key,value]);
+  this._storage.set(index,bucket)
+  this._size++ 
 };
 
-HashTable.prototype.set = function(key, value) {
-  // implement me...
-};
-// Time complexity:
+// Time complexity: O(n)
 
-HashTable.prototype.get = function(key) {
-  // implement me...
+// HashTable.prototype.retrieve = function(k) {
+//   var index = getIndexBelowMaxForKey(k, this._limit);
+
+//   var bucket = this._storage.get(index) || [];
+  
+
+//   for (var i = 0; i < bucket.length; i++) {
+//     var tuple = bucket[i];
+//     if (tuple[0] === k) {
+//       return tuple[1];
+//     }
+//   }
+
+//   return undefined;
+// };
+
+
+HashTable.prototype.get = function(key) { // retrieve
+ var index =simpleHash( key , this._limit)
+ var bucket = this._storage.get(index)
+ for ( var i =0; i< bucket.length ; i++){
+   var tupple=bucket[i];
+   if (tupple[0]=== key){
+     return tupple[1]
+   }
+   return "tHIS KEY DOES NOT EXIST"
+ }
+
 };
 // Time complexity:
 
 HashTable.prototype.has = function(key) {
+  var index = simpleHash( key , this._limit)
+  var bucket = this._storage.get(index)
+  if (bucket.length!==0){
+    
+    for ( var i = 0 ; i< bucket.length;i++){
+      var tupple=bucket[i];
+      if(tupple[0]===key){
+        return true
+      }
+    }
+  }
+  
+  return false
   // implement me...
 };
 // Time complexity:
 
 HashTable.prototype.delete = function(key) {
-  // implement me...
+  var index = simpleHash( key, this._limit)
+  var bucket = this._storage.get(index)
+  for ( var i =0 ; i <bucket.length ; i++){
+    tupple=bucket[i]
+    if ( tupple[0]===key){
+      var removed=tupple[1]
+      bucket.splice(i,1)
+      return removed;
+
+    }
+
+  }
 };
 // Time complexity:
 
@@ -114,7 +172,6 @@ HashTable.prototype.forEach = function(callback) {
 // Time complexity:
 
 
-
 /*
 *** Exercises:
 
@@ -125,3 +182,32 @@ HashTable.prototype.forEach = function(callback) {
 3. Implement a hash table using linked lists for collision-handling. Why might this be preferable to using arrays.
 
 */
+var LimitedArray = function(limit) {
+  var storage = [];
+
+  var limitedArray = {};
+  limitedArray.storage=storage
+  limitedArray.get = function(index) {
+    checkLimit(index);
+    return storage[index];
+  };
+  limitedArray.set = function(index, value) {
+    checkLimit(index);
+    storage[index] = value;
+        };
+limitedArray.each = function(callback) {
+    for (var i = 0; i < storage.length; i++) {
+      callback(storage[i], i, storage);
+    }
+  }
+var checkLimit = function(index) {
+  if (typeof index !== 'number') {
+    throw new Error('setter requires a numeric index for its first argument');
+        }
+if (limit <= index) {
+    throw new Error('Error trying to access an over-the-limit index');
+  }
+};
+
+return limitedArray;
+}
